@@ -21,7 +21,15 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
                GET : {
                   MASTER_DATA: '/model/MasterData',
                   MASTER_DATA_MAPPINGS : '/model/mappings/MasterData'
+               },
+               POST : {
+                  PRODUCT_MASTER : '/data/EntityData?entityName=',
+                  CUSTOMER_MASTER : '/data/EntityData?entityName='
                }
+            },
+            ENTITY : {
+               PRODUCT_MASTER : 'Product Master',
+               CUSTOMER_MASTER : 'Customer Master'
             },
             TOKEN: {
                ID: 'customscript_sl_fs_token',
@@ -29,6 +37,44 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
             }
          }
       }
+
+      FS.prototype.getFirstShiftMappings = function (masterData) {
+
+         var arrMappings = [];
+         var searchFirstShiftMappings = search.create({
+            type: 'customrecord_fs_mappings',
+            filters:
+               [
+                  ['custrecord_fs_map_data_type.custrecord_fs_md_entity_name','is', masterData],
+                  'AND',
+                  ['custrecord_fs_ns_field_id','isnotempty','']
+               ],
+            columns:
+               [
+                  search.createColumn({
+                     name: 'name',
+                     sort: search.Sort.ASC,
+                     label: 'Name'
+                  }),
+                  search.createColumn({name: 'custrecord_fs_map_data_type', label: 'Data Type'}),
+                  search.createColumn({name: 'custrecord_fs_display_name', label: 'Display Name'}),
+                  search.createColumn({name: 'custrecord_fs_source_table_column', label: 'Source Table Column'}),
+                  search.createColumn({name: 'custrecord_fs_ns_field_name', label: 'NetSuite Field Name'}),
+                  search.createColumn({name: 'custrecord_fs_ns_field_id', label: 'NetSuite Field ID'})
+               ]
+         });
+
+         searchFirstShiftMappings.run().each(function(result){
+            arrMappings.push({
+               firstshift_id : result.getValue({name: 'custrecord_fs_source_table_column'}),
+               netsuite_id : result.getValue({name: 'custrecord_fs_ns_field_id'}),
+            })
+            return true;
+         });
+
+         return arrMappings;
+
+      };
 
       FS.prototype.getTokenResponse = function () {
 
