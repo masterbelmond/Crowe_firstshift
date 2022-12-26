@@ -24,12 +24,14 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
                },
                POST : {
                   PRODUCT_MASTER : '/data/EntityData?entityName=',
-                  CUSTOMER_MASTER : '/data/EntityData?entityName='
+                  CUSTOMER_MASTER : '/data/EntityData?entityName=',
+                  LOCATION_MASTER : '/data/EntityData?entityName='
                }
             },
             ENTITY : {
                PRODUCT_MASTER : 'Product Master',
-               CUSTOMER_MASTER : 'Customer Master'
+               CUSTOMER_MASTER : 'Customer Master',
+               LOCATION_MASTER : 'Location Master'
             },
             TOKEN: {
                ID: 'customscript_sl_fs_token',
