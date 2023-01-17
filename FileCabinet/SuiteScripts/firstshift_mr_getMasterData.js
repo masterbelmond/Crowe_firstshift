@@ -10,6 +10,8 @@
  * @NAmdConfig ../SuiteScripts/firstshift_config.json
  *
  * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=3904
+ * Custom Record: firstshift | Master Data : https://tstdrv2685009.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=1678
+ * Custom Record: firstshift | Mappings : https://tstdrv2685009.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=1679
  * @fileoverview
  * Version    Date            Author           Remarks
  * 1.00       11 Dec 2022     eli@crowe        Initial version
@@ -62,6 +64,7 @@ define(['common', 'N/record', 'N/runtime', 'N/url', 'N/https', 'N/search'],
                value: {
                   id: valuePairs._id,
                   entity_name: valuePairs.ENTITY_NAME,
+                  _type : valuePairs._type
                }
             });
          }
@@ -137,7 +140,7 @@ define(['common', 'N/record', 'N/runtime', 'N/url', 'N/https', 'N/search'],
       //region FUNCTIONS
       function getMasterData(){
 
-         var rowData = [];
+         var arr = [];
          var tokenResponse = FS.getTokenResponse();
          var tenantId = FS.getTenantId(tokenResponse);
          var accesstoken = FS.getToken(tokenResponse);
@@ -154,37 +157,75 @@ define(['common', 'N/record', 'N/runtime', 'N/url', 'N/https', 'N/search'],
          headers['User-Agent-x'] = 'SuiteScript-Call';
          headers['access-token'] = accesstoken;
 
-         var urlGetMasterData = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.GET.MASTER_DATA;
+         var urlGetMasterEntityData = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.GET.MASTER_DATA;
 
-         var response = https.get({
-            url: urlGetMasterData,
+         var responseMasterEntityData = https.get({
+            url: urlGetMasterEntityData,
             headers: headers
          });
 
-         var strResponseBody = '';
-         var strResponseCode = response.code;
+         var strMasterEntityResponseBody = '';
+         var strMasterEntityResponseCode = responseMasterEntityData.code;
 
-         if (strResponseCode == 200 || strResponseCode == 201) {
-            strResponseBody = JSON.parse(response.body);
-            var isSuccess = strResponseBody.success;
-            if(isSuccess){
-               log.debug('strResponseBody', 'value: ' + strResponseBody.data.rowData);
-               rowData = strResponseBody.data.rowData;
+         if (strMasterEntityResponseCode === 200 || strMasterEntityResponseCode === 201) {
+            strMasterEntityResponseBody = JSON.parse(responseMasterEntityData.body);
+            var isSuccessMasterEntity = strMasterEntityResponseBody.success;
+            if(isSuccessMasterEntity){
+               log.debug('MASTER ENTITY', JSON.stringify(strMasterEntityResponseBody.data.rowData));
+               var arrMasterEntity = strMasterEntityResponseBody.data.rowData;
+               for(var m in arrMasterEntity){
+                  arr.push({
+                     _type : 'entity',
+                     _id : arrMasterEntity[m]._id,
+                     ENTITY_NAME : arrMasterEntity[m].ENTITY_NAME
+                  });
+               }
             }
          }
-         return rowData;
+
+         var urlGetOrderData = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.GET.ORDER_DATA;
+
+         var responseOrderData = https.get({
+            url: urlGetOrderData,
+            headers: headers
+         });
+
+         var strOrderResponseBody = '';
+         var strOrderResponseCode = responseOrderData.code;
+
+         if (strOrderResponseCode === 200 || strOrderResponseCode === 201) {
+            strOrderResponseBody = JSON.parse(responseOrderData.body);
+            var isSuccessOrder = strOrderResponseBody.success;
+            if(isSuccessOrder) {
+               log.debug('ORDERS', JSON.stringify(strOrderResponseBody.data.rowData));
+               var arrOrder = strOrderResponseBody.data.rowData;
+               for(var o in arrOrder){
+                  arr.push({
+                     _type : 'order',
+                     _id : arrOrder[o]._id,
+                     ENTITY_NAME : arrOrder[o].ENTITY_NAME
+                  });
+               }
+            }
+         }
+
+         log.debug('arr', JSON.stringify(arr));
+         return arr;
       }
 
       function createMasterData(valueArr){
 
          var id = valueArr.id;
          var entity_name = valueArr.entity_name;
+         var _type = valueArr._type;
+
          var create = record.create({
             type : 'customrecord_fs_master_data'
          });
          var externalId = id + '_' + entity_name;
-         create.setValue({fieldId: 'externalid', value: externalId});
+         create.setValue({fieldId: 'externalid', value: entity_name});
          create.setValue({fieldId: 'name', value: entity_name});
+         create.setValue({fieldId: 'custrecord_fs_md_type', value: _type});
          create.setValue({fieldId: 'custrecord_fs_md_id', value: id});
          create.setValue({fieldId: 'custrecord_fs_md_entity_name', value: entity_name});
          var masterDataId = create.save();

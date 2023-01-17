@@ -20,18 +20,28 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
                URI: paramBaseUri,
                GET : {
                   MASTER_DATA: '/model/MasterData',
-                  MASTER_DATA_MAPPINGS : '/model/mappings/MasterData'
+                  MASTER_DATA_MAPPINGS : '/model/mappings/MasterData',
+                  ORDER_DATA : '/model/Orders',
+                  SALES_ORDER_DATA_MAPPINGS : '/model/mappings/Orders/Sales Order Detail',
+                  PURCHASE_ORDER_DATA_MAPPINGS : '/model/mappings/Orders/Purchase Order Detail',
+                  PRODUCTION_ORDER_DATA_MAPPINGS : '/model/mappings/Orders/Production Order Detail'
                },
                POST : {
                   PRODUCT_MASTER : '/data/EntityData?entityName=',
                   CUSTOMER_MASTER : '/data/EntityData?entityName=',
-                  LOCATION_MASTER : '/data/EntityData?entityName='
+                  LOCATION_MASTER : '/data/EntityData?entityName=',
+                  SOURCE_MASTER : '/data/EntityData?entityName=',
+                  SALES_ORDER_DETAIL : '/data/EntityData?entityName='
                }
             },
             ENTITY : {
                PRODUCT_MASTER : 'Product Master',
                CUSTOMER_MASTER : 'Customer Master',
-               LOCATION_MASTER : 'Location Master'
+               LOCATION_MASTER : 'Location Master',
+               SOURCE_MASTER : 'Source Master'
+            },
+            ORDER : {
+               SALES_ORDER_DETAIL : 'Sales Order Detail'
             },
             TOKEN: {
                ID: 'customscript_sl_fs_token',
@@ -62,7 +72,9 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
                   search.createColumn({name: 'custrecord_fs_display_name', label: 'Display Name'}),
                   search.createColumn({name: 'custrecord_fs_source_table_column', label: 'Source Table Column'}),
                   search.createColumn({name: 'custrecord_fs_ns_field_name', label: 'NetSuite Field Name'}),
-                  search.createColumn({name: 'custrecord_fs_ns_field_id', label: 'NetSuite Field ID'})
+                  search.createColumn({name: 'custrecord_fs_ns_field_id', label: 'NetSuite Field ID'}),
+                  search.createColumn({name: 'custrecord_fs_ns_line_level', label: 'Line Level'}),
+                  search.createColumn({name: 'custrecord_fs_ns_type', label: 'Type'}),
                ]
          });
 
@@ -70,7 +82,9 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
             arrMappings.push({
                firstshift_id : result.getValue({name: 'custrecord_fs_source_table_column'}),
                netsuite_id : result.getValue({name: 'custrecord_fs_ns_field_id'}),
-            })
+               line_level : result.getValue({name: 'custrecord_fs_ns_line_level'}),
+               type : result.getValue({name: 'custrecord_fs_ns_type'}),
+            });
             return true;
          });
 

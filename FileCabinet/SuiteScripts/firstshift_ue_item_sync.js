@@ -52,6 +52,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
 
                   var netSuiteId = arrMappings[i].netsuite_id;
                   var firstShiftId = arrMappings[i].firstshift_id;
+                  var _type = arrMappings[i].type;
 
                   var tempValue = newRecord.getText({fieldId: netSuiteId.toString()});
                   if(FS.isEmpty(tempValue)){

@@ -1,18 +1,18 @@
 /**
- * @NScriptName firstshift | UE | Location Sync
- * @NScriptId customscript_ue_fs_location_sync
+ * @NScriptName firstshift | UE | Vendor Sync
+ * @NScriptId customscript_ue_fs_vendor_sync
  * @author eli@crowe
- * @filename firstshift_ue_location_sync.js
- * @description User-event script to sync location data to firstshift
+ * @filename firstshift_ue_vendor_sync.js
+ * @description User-event script to sync vendor data to firstshift as Source data
  * @NApiVersion 2.x
  * @NScriptType UserEventScript
  * @NModuleScope SameAccount
  * @NAmdConfig ../SuiteScripts/firstshift_config.json
  *
- * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=
+ * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=3909
  * @fileoverview
  * Version    Date            Author           Remarks
- * 1.00       24 Dec 2022     eli@crowe        Initial version
+ * 1.00       11 Jan 2023     eli@crowe        Initial version
  *
  */
 
@@ -32,13 +32,12 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
 
             var newRecord = context.newRecord;
 
-            var syncToFirstShift = newRecord.getValue({fieldId: 'custrecord_sync_firstshift'});
-            log.debug('IS SYNC', 'Value: ' + syncToFirstShift);
+            var syncToFirstShift = newRecord.getValue({fieldId: 'custentity_sync_firstshift'});
             if(!syncToFirstShift){
                return;
             }
 
-            var arrMappings = FS.getFirstShiftMappings(GLOBAL_CONSTANT.ENTITY.LOCATION_MASTER);
+            var arrMappings = FS.getFirstShiftMappings(GLOBAL_CONSTANT.ENTITY.SOURCE_MASTER);
             log.debug('arrMappings', JSON.stringify(arrMappings));
 
             var payload = {};
@@ -59,9 +58,8 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                      tempValue = newRecord.getValue({fieldId: netSuiteId.toString()});
                   }
 
-                  log.debug('LOOP', 'netSuiteId: ' + netSuiteId + ' | firstShiftId: ' + firstShiftId + ' | value: ' + tempValue);
-
                   if(!FS.isEmpty(tempValue)) {
+                     log.debug('LOOP', 'netSuiteId: ' + netSuiteId + ' | firstShiftId: ' + firstShiftId + ' | value: ' + tempValue);
                      rowData[firstShiftId] = tempValue.toString();
                   }
 
@@ -72,7 +70,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                if(!FS.isEmpty(rowData)){
 
                   arrRowData.push(rowData);
-                  payloadEntityName.ENTITY_NAME = GLOBAL_CONSTANT.ENTITY.LOCATION_MASTER;
+                  payloadEntityName.ENTITY_NAME = GLOBAL_CONSTANT.ENTITY.SOURCE_MASTER;
                   payload.ENTITY_META_DATA = payloadEntityName;
                   payload.rowData = arrRowData;
 
@@ -92,11 +90,11 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                   headers['User-Agent-x'] = 'SuiteScript-Call';
                   headers['access-token'] = accesstoken;
 
-                  var urlLocationMaster = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.POST.LOCATION_MASTER + GLOBAL_CONSTANT.ENTITY.LOCATION_MASTER;
-                  log.debug('url', 'value: ' + urlLocationMaster);
+                  var urlVendorMaster = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.POST.SOURCE_MASTER + GLOBAL_CONSTANT.ENTITY.SOURCE_MASTER;
+                  log.debug('url', 'value: ' + urlVendorMaster);
 
                   var response = https.post({
-                     url: urlLocationMaster,
+                     url: urlVendorMaster,
                      headers: headers,
                      body : JSON.stringify(payload)
                   });
@@ -106,14 +104,14 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
 
                   if (strResponseCode == 200 || strResponseCode == 201) {
                      strResponseBody = JSON.parse(response.body);
-                     log.debug('strResponseBody', 'value: ' + strResponseBody.data.rowData);
+                     log.debug('strResponseBody', 'value: ' + response.body);
                   }
                }
             }
 
          }
          catch(ex){
-            log.error({title: 'firstshift | UE | Location Sync', details: JSON.stringify(ex)});
+            log.error({title: 'firstshift | UE | Vendor Sync', details: JSON.stringify(ex)});
          }
       }
 
