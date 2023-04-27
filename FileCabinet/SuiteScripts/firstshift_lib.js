@@ -14,8 +14,19 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
       var runTimeContext = runtime.getCurrentScript();
       var paramBaseUri = runTimeContext.getParameter({name : 'custscript_fs_base_uri'});
 
+      var paramSyncVendor = runTimeContext.getParameter({name : 'custscript_search_fs_vendor'});
+      var paramSyncCustomer = runTimeContext.getParameter({name : 'custscript_search_fs_customer'});
+      var paramSyncProduct = runTimeContext.getParameter({name : 'custscript_search_fs_product'});
+      var paramSyncLocation = runTimeContext.getParameter({name : 'custscript_search_fs_location'});
+
       FS.prototype.GLOBAL_CONSTANT = function() {
          return GLOBAL_CONSTANT = {
+            SEARCH : {
+               VENDOR : paramSyncVendor,
+               CUSTOMER : paramSyncCustomer,
+               PRODUCT : paramSyncProduct,
+               LOCATION : paramSyncLocation
+            },
             ENDPOINT: {
                URI: paramBaseUri,
                GET : {
@@ -31,7 +42,9 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
                   CUSTOMER_MASTER : '/data/EntityData?entityName=',
                   LOCATION_MASTER : '/data/EntityData?entityName=',
                   SOURCE_MASTER : '/data/EntityData?entityName=',
-                  SALES_ORDER_DETAIL : '/data/EntityData?entityName='
+                  SALES_ORDER_DETAIL : '/data/EntityData?entityName=',
+                  PURCHASE_ORDER_DETAIL : '/data/EntityData?entityName=',
+                  PRODUCTION_ORDER_DETAIL : '/data/EntityData?entityName='
                }
             },
             ENTITY : {
@@ -41,7 +54,9 @@ define(['N/error', 'N/format', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/
                SOURCE_MASTER : 'Source Master'
             },
             ORDER : {
-               SALES_ORDER_DETAIL : 'Sales Order Detail'
+               SALES_ORDER_DETAIL : 'Sales Order Detail',
+               PURCHASE_ORDER_DETAIL : 'Purchase Order Detail',
+               PRODUCTION_ORDER_DETAIL : 'Production Order Detail'
             },
             TOKEN: {
                ID: 'customscript_sl_fs_token',

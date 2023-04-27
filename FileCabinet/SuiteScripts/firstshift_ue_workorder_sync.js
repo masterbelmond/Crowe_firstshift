@@ -1,18 +1,18 @@
 /**
- * @NScriptName firstshift | UE | Sales Order
- * @NScriptId customscript_ue_fs_sales_order
+ * @NScriptName firstshift | UE | Work Order Sync
+ * @NScriptId customscript_ue_fs_workorder
  * @author eli@crowe
- * @filename firstshift_ue_salesorder.js
- * @description User-event script to sync Sales Order data to firstshift
+ * @filename firstshift_ue_workorder_sync.js
+ * @description User-event script to sync Work Order data to firstshift
  * @NApiVersion 2.x
  * @NScriptType UserEventScript
  * @NModuleScope SameAccount
  * @NAmdConfig ../SuiteScripts/firstshift_config.json
  *
- * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=3905
+ * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=
  * @fileoverview
  * Version    Date            Author           Remarks
- * 1.00       12 Jan 2023     eli@crowe        Initial version
+ * 1.00       21 Jan 2023     eli@crowe        Initial version
  *
  */
 
@@ -37,7 +37,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                return;
             }
 
-            var arrMappingsOrderDetails = FS.getFirstShiftMappings(GLOBAL_CONSTANT.ORDER.SALES_ORDER_DETAIL);
+            var arrMappingsOrderDetails = FS.getFirstShiftMappings(GLOBAL_CONSTANT.ORDER.PRODUCTION_ORDER_DETAIL);
             log.debug('arrMappingsOrderDetails', JSON.stringify(arrMappingsOrderDetails));
 
             var payload = {};
@@ -46,10 +46,10 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
 
             if(!FS.isEmpty(arrMappingsOrderDetails)){
 
-               var salesOrderItemLineCount = newRecord.getLineCount({sublistId: 'item'});
-               log.debug('SALES ORDER LINE', 'count: ' + salesOrderItemLineCount);
+               var workOrderItemLineCount = newRecord.getLineCount({sublistId: 'item'});
+               log.debug('WORK ORDER LINE', 'count: ' + workOrderItemLineCount);
 
-               for (var f = 0; f < salesOrderItemLineCount; f++) {
+               for (var f = 0; f < workOrderItemLineCount; f++) {
                   var rowData = {};
                   for(var i in arrMappingsOrderDetails) {
 
@@ -57,26 +57,33 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                      var firstShiftId = arrMappingsOrderDetails[i].firstshift_id;
                      var line_level = arrMappingsOrderDetails[i].line_level;
                      var _type = arrMappingsOrderDetails[i].type;
-
-                     if(line_level){
-                        var tempLineValue = newRecord.getSublistValue({sublistId: 'item', fieldId: netSuiteId, line: f});
+                     if (line_level) {
+                        var tempLineValue = newRecord.getSublistValue({
+                           sublistId: 'item',
+                           fieldId: netSuiteId,
+                           line: f
+                        });
                         if (FS.isEmpty(tempLineValue)) {
-                           tempLineValue = newRecord.getSublistText({sublistId: 'item', fieldId: netSuiteId, line: f});
+                           tempLineValue = newRecord.getSublistText({
+                              sublistId: 'item',
+                              fieldId: netSuiteId,
+                              line: f
+                           });
                         }
                         if (!FS.isEmpty(tempLineValue)) {
                            log.debug('LOOP', 'netSuiteId: ' + netSuiteId + ' | firstShiftId: ' + firstShiftId + ' | value: ' + tempLineValue);
                            rowData[firstShiftId] = tempLineValue.toString();
                         }
                      }
-                     else{
+                     else {
                         var tempHeaderValue = newRecord.getValue({fieldId: netSuiteId.toString()});
-                        if(!FS.isEmpty(tempHeaderValue) && _type === 'date'){
+                        if (!FS.isEmpty(tempHeaderValue) && _type === 'date') {
                            tempHeaderValue = tempHeaderValue.getTime();
                         }
-                        if(FS.isEmpty(tempHeaderValue)){
+                        if (FS.isEmpty(tempHeaderValue)) {
                            tempHeaderValue = newRecord.getText({fieldId: netSuiteId.toString()});
                         }
-                        if(!FS.isEmpty(tempHeaderValue)) {
+                        if (!FS.isEmpty(tempHeaderValue)) {
                            log.debug('LOOP', 'netSuiteId: ' + netSuiteId + ' | firstShiftId: ' + firstShiftId + ' | value: ' + tempHeaderValue);
                            rowData[firstShiftId] = tempHeaderValue.toString();
                         }
@@ -90,7 +97,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
 
                if(!FS.isEmpty(arrRowData)){
 
-                  payloadEntityName.ENTITY_NAME = GLOBAL_CONSTANT.ORDER.SALES_ORDER_DETAIL;
+                  payloadEntityName.ENTITY_NAME = GLOBAL_CONSTANT.ORDER.PRODUCTION_ORDER_DETAIL;
                   payload.ENTITY_META_DATA = payloadEntityName;
                   payload.rowData = arrRowData;
 
@@ -110,11 +117,11 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                   headers['User-Agent-x'] = 'SuiteScript-Call';
                   headers['access-token'] = accesstoken;
 
-                  var urlOrderDetails = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.POST.SALES_ORDER_DETAIL + GLOBAL_CONSTANT.ORDER.SALES_ORDER_DETAIL;
-                  log.debug('urlOrderDetails', 'value: ' + urlOrderDetails);
+                  var urlWorkOrderDetails = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.POST.PRODUCTION_ORDER_DETAIL + GLOBAL_CONSTANT.ORDER.PRODUCTION_ORDER_DETAIL;
+                  log.debug('urlWorkOrderDetails', 'value: ' + urlWorkOrderDetails);
 
                   var response = https.post({
-                     url: urlOrderDetails,
+                     url: urlWorkOrderDetails,
                      headers: headers,
                      body : JSON.stringify(payload)
                   });
@@ -131,7 +138,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
             }
          }
          catch(ex){
-            log.error({title: 'firstshift | UE | Sales Order Sync', details: JSON.stringify(ex)});
+            log.error({title: 'firstshift | UE | Work Order Sync', details: JSON.stringify(ex)});
          }
       }
 

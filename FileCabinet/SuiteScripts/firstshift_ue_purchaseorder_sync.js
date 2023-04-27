@@ -1,18 +1,18 @@
 /**
- * @NScriptName firstshift | UE | Sales Order
- * @NScriptId customscript_ue_fs_sales_order
+ * @NScriptName firstshift | UE | Purchase Order Sync
+ * @NScriptId customscript_ue_fs_purchaseorder
  * @author eli@crowe
- * @filename firstshift_ue_salesorder.js
- * @description User-event script to sync Sales Order data to firstshift
+ * @filename firstshift_ue_purchaseorder_sync.js
+ * @description User-event script to sync Purchase Order data to firstshift
  * @NApiVersion 2.x
  * @NScriptType UserEventScript
  * @NModuleScope SameAccount
  * @NAmdConfig ../SuiteScripts/firstshift_config.json
  *
- * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=3905
+ * https://tstdrv2685009.app.netsuite.com/app/common/scripting/script.nl?id=
  * @fileoverview
  * Version    Date            Author           Remarks
- * 1.00       12 Jan 2023     eli@crowe        Initial version
+ * 1.00       21 Jan 2023     eli@crowe        Initial version
  *
  */
 
@@ -37,7 +37,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                return;
             }
 
-            var arrMappingsOrderDetails = FS.getFirstShiftMappings(GLOBAL_CONSTANT.ORDER.SALES_ORDER_DETAIL);
+            var arrMappingsOrderDetails = FS.getFirstShiftMappings(GLOBAL_CONSTANT.ORDER.PURCHASE_ORDER_DETAIL);
             log.debug('arrMappingsOrderDetails', JSON.stringify(arrMappingsOrderDetails));
 
             var payload = {};
@@ -46,18 +46,18 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
 
             if(!FS.isEmpty(arrMappingsOrderDetails)){
 
-               var salesOrderItemLineCount = newRecord.getLineCount({sublistId: 'item'});
-               log.debug('SALES ORDER LINE', 'count: ' + salesOrderItemLineCount);
+               var purchaseOrderItemLineCount = newRecord.getLineCount({sublistId: 'item'});
 
-               for (var f = 0; f < salesOrderItemLineCount; f++) {
-                  var rowData = {};
-                  for(var i in arrMappingsOrderDetails) {
+               var rowData = {};
 
-                     var netSuiteId = arrMappingsOrderDetails[i].netsuite_id;
-                     var firstShiftId = arrMappingsOrderDetails[i].firstshift_id;
-                     var line_level = arrMappingsOrderDetails[i].line_level;
-                     var _type = arrMappingsOrderDetails[i].type;
+               for(var i in arrMappingsOrderDetails) {
 
+                  var netSuiteId = arrMappingsOrderDetails[i].netsuite_id;
+                  var firstShiftId = arrMappingsOrderDetails[i].firstshift_id;
+                  var line_level = arrMappingsOrderDetails[i].line_level;
+                  var _type = arrMappingsOrderDetails[i].type;
+
+                  for (var f = 0; f < purchaseOrderItemLineCount; f++) {
                      if(line_level){
                         var tempLineValue = newRecord.getSublistValue({sublistId: 'item', fieldId: netSuiteId, line: f});
                         if (FS.isEmpty(tempLineValue)) {
@@ -82,15 +82,14 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                         }
                      }
                   }
-                  log.debug('LINE LOOP: ' + f, JSON.stringify(rowData));
-                  arrRowData.push(rowData);
                }
 
-               log.debug('arrRowData', JSON.stringify(arrRowData));
+               log.debug('rowData', JSON.stringify(rowData));
 
-               if(!FS.isEmpty(arrRowData)){
+               if(!FS.isEmpty(rowData)){
 
-                  payloadEntityName.ENTITY_NAME = GLOBAL_CONSTANT.ORDER.SALES_ORDER_DETAIL;
+                  arrRowData.push(rowData);
+                  payloadEntityName.ENTITY_NAME = GLOBAL_CONSTANT.ORDER.PURCHASE_ORDER_DETAIL;
                   payload.ENTITY_META_DATA = payloadEntityName;
                   payload.rowData = arrRowData;
 
@@ -110,11 +109,11 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
                   headers['User-Agent-x'] = 'SuiteScript-Call';
                   headers['access-token'] = accesstoken;
 
-                  var urlOrderDetails = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.POST.SALES_ORDER_DETAIL + GLOBAL_CONSTANT.ORDER.SALES_ORDER_DETAIL;
-                  log.debug('urlOrderDetails', 'value: ' + urlOrderDetails);
+                  var urlPurchaseOrderDetails = GLOBAL_CONSTANT.ENDPOINT.URI + '/configurations/' + tenantId + GLOBAL_CONSTANT.ENDPOINT.POST.PURCHASE_ORDER_DETAIL + GLOBAL_CONSTANT.ORDER.PURCHASE_ORDER_DETAIL;
+                  log.debug('urlPurchaseOrderDetails', 'value: ' + urlPurchaseOrderDetails);
 
                   var response = https.post({
-                     url: urlOrderDetails,
+                     url: urlPurchaseOrderDetails,
                      headers: headers,
                      body : JSON.stringify(payload)
                   });
@@ -131,7 +130,7 @@ define(['common', 'N/runtime', 'N/record', 'N/https'],
             }
          }
          catch(ex){
-            log.error({title: 'firstshift | UE | Sales Order Sync', details: JSON.stringify(ex)});
+            log.error({title: 'firstshift | UE | Purchase Order Sync', details: JSON.stringify(ex)});
          }
       }
 
